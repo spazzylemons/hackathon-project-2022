@@ -1,4 +1,7 @@
 const { SerialPort } = require('serialport')
+const language = require('@google-cloud/language');
+const langClient = new language.LanguageServiceClient({ keyFilename: './google_auth.json' });
+
 var messages = []
 var relativeLocation;
 var toggle = true;
@@ -53,6 +56,18 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
+  document = {
+    content: message.content,
+    type: "PLAIN_TEXT"
+  }
+  var [result] = await langClient.analyzeSentiment({document: document});
+  console.log(result);
+  var sentiment = result.documentSentiment;
+  console.log(message.content)
+  console.log(`Sentiment Score: ${sentiment.score}`)
+  if (sentiment.score < -.2 && sentiment.magnitude > 0.5) console.log(`caution`)
+  console.log(`Sentiment Magnitude: ${sentiment.magnitude}`)
+
   let messageData = undefined;
   if (message.attachments.size > 0) {
     const [result] = await visionClient.labelDetection(message.attachments.at(0).url);
@@ -65,7 +80,7 @@ client.on('messageCreate', async (message) => {
   if (messageData === undefined) {
     messageData = message.content;
   }
-  console.log(portWrite(messageData));
+  //console.log(portWrite(messageData));
   messages.push(messageData)
   relativeLocation = messages.length;
 });
