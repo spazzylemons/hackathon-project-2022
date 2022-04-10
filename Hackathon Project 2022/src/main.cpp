@@ -13,13 +13,18 @@ U8G2_SSD1306_128X64_ALT0_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE); // SS
 String incomingByte = "";
 int ledPort = 4;
 int buzzer = 5;
+int totalMessages = 0;
+int sensorValue;
 
 void setup(void)
 {
   pinMode(buzzer, OUTPUT);
   pinMode(ledPort, OUTPUT);
+  pinMode(A0, INPUT);
+  sensorValue = analogRead(A0);
   u8g2.begin();
   Serial.begin(9600);
+  
 }
 
 static void print_string(const char *string) {
@@ -29,9 +34,17 @@ static void print_string(const char *string) {
   u8g2.sendBuffer();                  // transfer internal memory to the display
 }
 
-void loop(void)
-{
+void loop(void) {
+  delay(1000);
+
+  if (analogRead(A0) > 960) {
+    Serial.write(-1);
+  } else if (analogRead(A0) < 650) {
+    Serial.write(1);
+  }
+
   if (Serial.available() > 0)  {
+    totalMessages ++;
     digitalWrite(ledPort, HIGH);
     tone(buzzer, 1000);
     delay(100);
@@ -43,7 +56,7 @@ void loop(void)
     // say what you got:
     Serial.print("I received: ");
     Serial.println(incomingByte);
-
+  
     const char *string = incomingByte.c_str();
     do {
       print_string(string);
