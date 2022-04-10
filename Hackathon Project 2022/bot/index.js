@@ -4,7 +4,9 @@ const port = new SerialPort({
     path: 'COM3',
     baudRate: 9600,
 })
-port.write('hi doidhwaiohdawihoiawdwad\0', function(err) {
+
+function portWrite(string) {
+  port.write(`${string}\0`, function(err) {
     if (err) {
       return console.log('Error on write: ', err.message)
     }
@@ -15,6 +17,7 @@ port.write('hi doidhwaiohdawihoiawdwad\0', function(err) {
   port.on('error', function(err) {
     console.log('Error: ', err.message)
   })
+}
   
 
 // Require the necessary discord.js classes
@@ -30,8 +33,8 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', (message) => {
-    console.log(message.content);
+    console.log(portWrite(message.content));
 });
 
 // Login to Discord with your client's token
-//client.login(token);
+client.login(token);
