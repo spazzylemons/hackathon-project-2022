@@ -42,7 +42,10 @@ port.on(`data`, data => {
 const { Client, Intents } = require('discord.js');
 const { token } = require('./config.json');
 const vision = require('@google-cloud/vision');
+const video = require('@google-cloud/video-intelligence').v1;
 const visionClient = new vision.ImageAnnotatorClient({ keyFilename: './google_auth.json' });
+const videoClient = new video.VideoIntelligenceServiceClient({ keyFilename: './google_auth.json' });
+const fetch = require('node-fetch');
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
@@ -55,11 +58,25 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
   let messageData = undefined;
   if (message.attachments.size > 0) {
-    const [result] = await visionClient.labelDetection(message.attachments.at(0).url);
-    if (result.error) console.error(result.error);
-    const labelAnnotations = result.labelAnnotations;
-    if (labelAnnotations) {
-      messageData = labelAnnotations.slice(0, 2).map(i => i.description).join(', ');
+    const attachment = message.attachments.at(0);
+    if (attachment.contentType?.startsWith('video')) {
+      const file = await fetch(attachment.url);
+      const array = new Uint8Array(await file.arrayBuffer());
+      const [operation] = await videoClient.annotateVideo({
+        inputContent: btoa(String.fromCharCode(...new Uint8Array(array))),
+        features: ['LABEL_DETECTION'],
+      });
+      const [operationResult] = await operation.promise();
+      const annotations = operationResult.annotationResults[0];
+      const labels = annotations.segmentLabelAnnotations;
+      messageData = labels.slice(0, 2).map(i => i.entity.description).join(', ');
+    } else {
+      const [result] = await visionClient.labelDetection(message.attachments.at(0).url);
+      if (result.error) console.error(result.error);
+      const labelAnnotations = result.labelAnnotations;
+      if (labelAnnotations) {
+        messageData = labelAnnotations.slice(0, 2).map(i => i.description).join(', ');
+      }
     }
   }
   if (messageData === undefined) {

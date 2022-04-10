@@ -9,8 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/video-intelligence": "^3.4.1",
     "@google-cloud/vision": "^2.4.2",
     "discord.js": "^13.6.0",
+    "node-fetch": "^2.6.7",
     "serialport": "^10.4.0"
   }
 }
