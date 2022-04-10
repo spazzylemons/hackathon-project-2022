@@ -20,6 +20,13 @@ void setup(void)
   Serial.begin(9600);
 }
 
+static void print_string(const char *string) {
+  u8g2.clearBuffer();                 // clear the internal memory
+  u8g2.setFont(u8g2_font_ncenB08_tr); // choose a suitable font
+  u8g2.drawStr(0, 10, string);        // write something to the internal memory
+  u8g2.sendBuffer();                  // transfer internal memory to the display
+}
+
 void loop(void)
 {
   if (Serial.available() > 0)  {
@@ -30,12 +37,12 @@ void loop(void)
     // say what you got:
     Serial.print("I received: ");
     Serial.println(incomingByte);
-    u8g2.clearBuffer();                        // clear the internal memory
-    u8g2.setFont(u8g2_font_ncenB08_tr);        // choose a suitable font
-   
-    //itoa(incomingByte, buf, 10);
-    u8g2.drawStr(0, 10, incomingByte.c_str()); // write something to the internal memory
-    u8g2.sendBuffer();                         // transfer internal memory to the display
+
+    const char *string = incomingByte.c_str();
+    do {
+      print_string(string);
+      delay(100);
+    } while (u8g2.getStrWidth(string++) > u8g2.getWidth());
     delay(1000);
     digitalWrite(ledPort, LOW);
   }
