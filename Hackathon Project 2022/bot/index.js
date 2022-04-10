@@ -1,3 +1,6 @@
+const accountSid = require("./config.json").twilioID;
+const authToken = require("./config.json").twilioToken;
+const twilioClient = require('twilio')(accountSid, authToken);
 const { SerialPort } = require('serialport')
 const language = require('@google-cloud/language');
 const langClient = new language.LanguageServiceClient({ keyFilename: './google_auth.json' });
@@ -33,7 +36,7 @@ port.on(`data`, data => {
     if (relativeLocation >= messages.length) relativeLocation = messages.length - 1;
     console.log(`index: ${relativeLocation}`)
     console.log(messages[relativeLocation])
-    
+
     if (toggle) {
       portWrite(messages[relativeLocation]);
     }
@@ -63,12 +66,20 @@ client.on('messageCreate', async (message) => {
     content: message.content,
     type: "PLAIN_TEXT"
   }
-  var [result] = await langClient.analyzeSentiment({document: document});
+  var [result] = await langClient.analyzeSentiment({ document: document });
   console.log(result);
   var sentiment = result.documentSentiment;
   console.log(message.content)
   console.log(`Sentiment Score: ${sentiment.score}`)
-  if (sentiment.score < -.2 && sentiment.magnitude > 0.5) console.log(`caution`)
+  if (sentiment.score < -.2 && sentiment.magnitude > 0.2) {
+    twilioClient.messages
+      .create({
+        body: `Caution: ${message.author.username} is showing signs of depression/self harm in Discord. The message was ${message.content}`,
+        from: require("./config.json").twilioNumber,
+        to: require("./config.json").myNumber
+      })
+      .then(message => console.log(message.sid));
+  }
   console.log(`Sentiment Magnitude: ${sentiment.magnitude}`)
 
   let messageData = undefined;
@@ -97,7 +108,7 @@ client.on('messageCreate', async (message) => {
   if (messageData === undefined) {
     messageData = message.content;
   }
-  //console.log(portWrite(messageData));
+  console.log(portWrite(messageData));
   messages.push(messageData)
   relativeLocation = messages.length;
 });
