@@ -1,3 +1,22 @@
+const { SerialPort } = require('serialport')
+
+const port = new SerialPort({
+    path: 'COM3',
+    baudRate: 9600,
+})
+port.write('hi doidhwaiohdawihoiawdwad\0', function(err) {
+    if (err) {
+      return console.log('Error on write: ', err.message)
+    }
+    console.log('message written')
+  })
+  
+  // Open errors will be emitted as an error event
+  port.on('error', function(err) {
+    console.log('Error: ', err.message)
+  })
+  
+
 // Require the necessary discord.js classes
 const { Client, Intents } = require('discord.js');
 const { token } = require('./config.json');
@@ -15,4 +34,4 @@ client.on('messageCreate', (message) => {
 });
 
 // Login to Discord with your client's token
-client.login(token);
+//client.login(token);
