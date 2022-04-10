@@ -37,6 +37,8 @@ port.on(`data`, data => {
 // Require the necessary discord.js classes
 const { Client, Intents } = require('discord.js');
 const { token } = require('./config.json');
+const vision = require('@google-cloud/vision');
+const visionClient = new vision.ImageAnnotatorClient({ keyFilename: './google_auth.json' });
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
@@ -46,9 +48,21 @@ client.once('ready', () => {
   console.log('Ready!');
 });
 
-client.on('messageCreate', (message) => {
-  console.log(portWrite(message.content));
-  messages.push(message.content)
+client.on('messageCreate', async (message) => {
+  let messageData = undefined;
+  if (message.attachments.size > 0) {
+    const [result] = await visionClient.labelDetection(message.attachments.at(0).url);
+    if (result.error) console.error(result.error);
+    const labelAnnotations = result.labelAnnotations;
+    if (labelAnnotations) {
+      messageData = labelAnnotations.slice(0, 2).map(i => i.description).join(', ');
+    }
+  }
+  if (messageData === undefined) {
+    messageData = message.content;
+  }
+  console.log(portWrite(messageData));
+  messages.push(messageData)
   relativeLocation = messages.length;
 });
 
