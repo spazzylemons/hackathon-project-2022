@@ -12,9 +12,11 @@ U8G2_SSD1306_128X64_ALT0_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE); // SS
 // U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);    //Low spped I2C
 String incomingByte = "";
 int ledPort = 4;
+int buzzer = 5;
 
 void setup(void)
 {
+  pinMode(buzzer, OUTPUT);
   pinMode(ledPort, OUTPUT);
   u8g2.begin();
   Serial.begin(9600);
@@ -31,6 +33,10 @@ void loop(void)
 {
   if (Serial.available() > 0)  {
     digitalWrite(ledPort, HIGH);
+    tone(buzzer, 1000);
+    delay(100);
+    digitalWrite(ledPort, LOW);
+    noTone(buzzer);
     // read the incoming byte:
     incomingByte = Serial.readString();
 
@@ -43,7 +49,5 @@ void loop(void)
       print_string(string);
       delay(100);
     } while (u8g2.getStrWidth(string++) > u8g2.getWidth());
-    delay(1000);
-    digitalWrite(ledPort, LOW);
   }
 }
