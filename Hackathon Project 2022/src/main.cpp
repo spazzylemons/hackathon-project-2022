@@ -13,6 +13,7 @@ U8G2_SSD1306_128X64_ALT0_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE); // SS
 String incomingByte = "";
 int ledPort = 4;
 int buzzer = 5;
+int button = 6;
 int totalMessages = 0;
 int sensorValue;
 
@@ -20,6 +21,7 @@ void setup(void)
 {
   pinMode(buzzer, OUTPUT);
   pinMode(ledPort, OUTPUT);
+  pinMode(button, INPUT);
   pinMode(A0, INPUT);
   sensorValue = analogRead(A0);
   u8g2.begin();
@@ -36,12 +38,6 @@ static void print_string(const char *string) {
 
 void loop(void) {
   delay(1000);
-
-  if (analogRead(A0) > 960) {
-    Serial.write(-1);
-  } else if (analogRead(A0) < 650) {
-    Serial.write(1);
-  }
 
   if (Serial.available() > 0)  {
     totalMessages ++;
@@ -62,5 +58,13 @@ void loop(void) {
       print_string(string);
       delay(100);
     } while (u8g2.getStrWidth(string++) > u8g2.getWidth());
-  }
+
+    delay(1000);
+  } else if (digitalRead(button) == HIGH) {
+     if (analogRead(A0) > 960) {
+      Serial.write(-1);
+    } else if (analogRead(A0) < 650) {
+      Serial.write(1);
+    }
+  } 
 }

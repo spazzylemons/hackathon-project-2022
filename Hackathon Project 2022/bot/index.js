@@ -1,7 +1,7 @@
 const { SerialPort } = require('serialport')
 var messages = []
 var relativeLocation;
-
+var toggle = true;
 const port = new SerialPort({
   path: 'COM3',
   baudRate: 9600,
@@ -27,10 +27,14 @@ port.on(`data`, data => {
     console.log(`detected: ${x}`)
     relativeLocation += x;
     if (relativeLocation < 0) relativeLocation = 0;
-    if (relativeLocation == messages.length) relativeLocation = messages.length - 1;
+    if (relativeLocation >= messages.length) relativeLocation = messages.length - 1;
     console.log(`index: ${relativeLocation}`)
     console.log(messages[relativeLocation])
-    portWrite(messages[relativeLocation - 1]);
+    
+    if (toggle) {
+      portWrite(messages[relativeLocation]);
+    }
+    toggle = !(relativeLocation == 0 || relativeLocation == messages.length - 1);
   }
 })
 
